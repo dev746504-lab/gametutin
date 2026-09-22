@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tự Tin Thể Hiện Bản Thân</title>
+<style>
+  /* ===== BIẾN MÀU & THIẾT LẬP CHUNG ===== */
+  :root{
+    --pink:#ff6fa5;
+    --orange:#ff9f43;
+    --yellow:#ffd93d;
+    --green:#6bcB77;
+    --blue:#4d96ff;
+    --purple:#9b5de5;
+    --deep-purple:#2b1055;
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0; height:100%;
+    font-family:'Segoe UI', 'Arial Rounded MT Bold', Arial, sans-serif;
+  }
+  body{
+    background:linear-gradient(135deg,#fff6e5,#ffe0f0);
+  }
+  /* Mỗi "màn hình" chiếm toàn bộ khung nhìn, cuộn được khi nội dung dài */
+  .screen{
+    display:none;
+    min-height:100vh;
+    width:100%;
+    overflow-y:auto;
+    padding:30px 20px 60px;
+    text-align:center;
+  }
+  .screen.active{ display:block; }
+
+  h1.main-title{
+    font-size:56px;
+    color:#ff3d7f;
+    text-shadow:3px 3px 0 #ffd93d;
+    margin:20px 0 10px;
+  }
+  h2.game-title{
+    font-size:48px;
+    margin:10px 0 20px;
+  }
+  p.subtitle{
+    font-size:30px;
+    color:#555;
+    margin-bottom:40px;
+  }
+
+  /* ===== NÚT BẤM CHUNG ===== */
+  button{
+    cursor:pointer;
+    border:none;
+    border-radius:20px;
+    font-weight:bold;
+    font-family:inherit;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow:0 6px 0 rgba(0,0,0,0.15);
+  }
+  button:active{
+    transform:translateY(4px);
+    box-shadow:0 2px 0 rgba(0,0,0,0.15);
+  }
+
+  .big-menu-btn{
+    font-size:34px;
+    padding:40px 50px;
+    margin:20px;
+    color:#fff;
+    min-width:400px;
+  }
+  .big-menu-btn.game1{ background:linear-gradient(135deg,var(--pink),var(--purple)); }
+  .big-menu-btn.game2{ background:linear-gradient(135deg,var(--blue),var(--green)); }
+
+  .back-btn{
+    font-size:24px;
+    padding:14px 28px;
+    background:#eee;
+    color:#333;
+    position:sticky;
+    top:10px;
+    float:left;
+    margin-left:10px;
+    z-index:50;
+  }
+  .back-btn:hover{ background:#ddd; }
+
+  .action-btn{
+    font-size:28px;
+    padding:18px 36px;
+    color:#fff;
+    background:linear-gradient(135deg,var(--orange),var(--pink));
+    margin:10px;
+  }
+  .danger-btn{
+    font-size:24px;
+    padding:14px 30px;
+    color:#fff;
+    background:#e05656;
+    margin:10px;
+  }
+
+  /* ===== TRÒ CHƠI 1: BẢNG TỰ TIN CẢ LỚP ===== */
+  .form-box{
+    background:#fff;
+    border-radius:24px;
+    padding:30px;
+    max-width:700px;
+    margin:0 auto 30px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.1);
+  }
+  .form-box label{
+    display:block;
+    font-size:28px;
+    text-align:left;
+    margin:14px 0 6px 6px;
+    color:#333;
+  }
+  .form-box input[type="text"]{
+    width:100%;
+    font-size:28px;
+    padding:14px 16px;
+    border:3px solid var(--purple);
+    border-radius:14px;
+    font-family:inherit;
+  }
+  .form-box input[type="text"]:focus{
+    outline:none;
+    border-color:var(--pink);
+  }
+
+  /* Bầu trời đêm chứa các ngôi sao */
+  .sky{
+    background:radial-gradient(ellipse at top, #2b1055 0%, #0d0221 80%);
+    border-radius:24px;
+    max-width:1100px;
+    margin:0 auto;
+    padding:30px;
+    min-height:420px;
+    max-height:65vh;
+    overflow-y:auto;
+    position:relative;
+    display:flex;
+    flex-wrap:wrap;
+    align-content:flex-start;
+    justify-content:center;
+    gap:24px;
+  }
+  .sky-empty-msg{
+    color:#cbb9ff;
+    font-size:26px;
+    margin-top:60px;
+    width:100%;
+  }
+  /* các chấm sao nhỏ lấp lánh trang trí nền */
+  .twinkle{
+    position:absolute;
+    background:#fff;
+    border-radius:50%;
+    animation:twinkle 2.4s ease-in-out infinite;
+    pointer-events:none;
+  }
+  @keyframes twinkle{
+    0%,100%{ opacity:0.2; }
+    50%{ opacity:1; }
+  }
+
+  .star-card{
+    background:rgba(255,255,255,0.12);
+    border:2px solid var(--yellow);
+    border-radius:20px;
+    padding:18px 20px;
+    width:260px;
+    color:#fff;
+    animation:flyUp 0.8s ease-out forwards;
+    box-shadow:0 0 18px rgba(255,217,61,0.5);
+  }
+  @keyframes flyUp{
+    0%{ opacity:0; transform:translateY(120px) scale(0.4) rotate(0deg); }
+    70%{ opacity:1; }
+    100%{ opacity:1; transform:translateY(0) scale(1) rotate(var(--rot,0deg)); }
+  }
+  .star-card .star-icon{ font-size:36px; }
+  .star-card .star-name{
+    font-size:26px;
+    font-weight:bold;
+    color:var(--yellow);
+    margin:6px 0 4px;
+  }
+  .star-card .star-text{
+    font-size:22px;
+    line-height:1.3;
+  }
+
+  /* ===== TRÒ CHƠI 2: VÒNG QUAY ĐIỂM MẠNH ===== */
+  .wheel-wrap{
+    position:relative;
+    width:min(90vw,520px);
+    height:min(90vw,520px);
+    margin:20px auto;
+  }
+  .pointer{
+    position:absolute;
+    top:-14px;
+    left:50%;
+    transform:translateX(-50%);
+    width:0; height:0;
+    border-left:28px solid transparent;
+    border-right:28px solid transparent;
+    border-top:44px solid #e05656;
+    z-index:10;
+    filter:drop-shadow(0 3px 3px rgba(0,0,0,0.3));
+  }
+  .wheel{
+    width:100%;
+    height:100%;
+    border-radius:50%;
+    position:relative;
+    border:8px solid #fff;
+    box-shadow:0 0 0 6px #ffd93d, 0 10px 30px rgba(0,0,0,0.25);
+    transition:transform 4s cubic-bezier(0.17,0.67,0.12,0.99);
+  }
+  .wheel-label{
+    position:absolute;
+    top:50%; left:50%;
+    width:50%;
+    height:0;
+    display:flex;
+    align-items:center;
+    justify-content:flex-start;
+    padding-left:16px;
+    transform-origin:0 0;
+    font-size:22px;
+    font-weight:bold;
+    color:#fff;
+    text-shadow:1px 1px 3px rgba(0,0,0,0.5);
+  }
+  .wheel-center{
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    width:90px; height:90px;
+    border-radius:50%;
+    background:#fff;
+    box-shadow:0 4px 10px rgba(0,0,0,0.3);
+    display:flex; align-items:center; justify-content:center;
+    font-size:34px;
+    z-index:5;
+  }
+
+  #spinBtn{
+    font-size:32px;
+    padding:20px 50px;
+    color:#fff;
+    background:linear-gradient(135deg,var(--pink),var(--orange));
+    margin-top:10px;
+  }
+
+  .result-box{
+    max-width:800px;
+    margin:30px auto 0;
+    background:#fff;
+    border-radius:24px;
+    padding:26px 30px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.12);
+    display:none;
+  }
+  .result-box.show{ display:block; }
+  .result-box .result-main{
+    font-size:32px;
+    font-weight:bold;
+    color:#333;
+    line-height:1.4;
+  }
+  .result-box .result-main .keyword{
+    color:#ff3d7f;
+  }
+  .result-box .result-hint{
+    margin-top:16px;
+    font-size:24px;
+    color:#666;
+    background:#fff6e5;
+    border-radius:14px;
+    padding:14px 18px;
+  }
+
+  @media (max-width:600px){
+    h1.main-title{ font-size:38px; }
+    h2.game-title{ font-size:32px; }
+    .big-menu-btn{ min-width:80%; font-size:26px; padding:26px 20px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ============ MÀN HÌNH 1: CHỌN TRÒ CHƠI ============ -->
+  <div id="screen-menu" class="screen active">
+    <h1 class="main-title">🌟 TỰ TIN THỂ HIỆN BẢN THÂN 🌟</h1>
+    <p class="subtitle">Cô giáo chọn 1 trong 2 hoạt động bên dưới</p>
+    <div>
+      <button class="big-menu-btn game1" onclick="showScreen('screen-stars')">⭐ Bảng Tự Tin Cả Lớp</button><br>
+      <button class="big-menu-btn game2" onclick="showScreen('screen-wheel')">🎡 Vòng Quay Điểm Mạnh</button>
+    </div>
+  </div>
+
+  <!-- ============ MÀN HÌNH 2: BẢNG TỰ TIN CẢ LỚP ============ -->
+  <div id="screen-stars" class="screen">
+    <button class="back-btn" onclick="showScreen('screen-menu')">⬅️ Quay lại màn hình chọn trò chơi</button>
+    <h2 class="game-title">⭐ Bảng Tự Tin Cả Lớp ⭐</h2>
+
+    <div class="form-box">
+      <label for="studentName">👦👧 Tên học sinh</label>
+      <input type="text" id="studentName" placeholder="Ví dụ: Nguyễn Văn An" maxlength="40">
+
+      <label for="prideText">💬 Điều em tự hào về bản thân</label>
+      <input type="text" id="prideText" placeholder="Ví dụ: Em hát rất hay" maxlength="80">
+
+      <div>
+        <button class="action-btn" onclick="addStar()">✨ Thêm vào bầu trời sao</button>
+        <button class="danger-btn" onclick="clearStars()">🗑️ Xóa hết</button>
+      </div>
+    </div>
+
+    <div class="sky" id="sky">
+      <p class="sky-empty-msg" id="skyEmptyMsg">Bầu trời đang chờ những ngôi sao đầu tiên của lớp mình... ✨</p>
+    </div>
+  </div>
+
+  <!-- ============ MÀN HÌNH 3: VÒNG QUAY ĐIỂM MẠNH ============ -->
+  <div id="screen-wheel" class="screen">
+    <button class="back-btn" onclick="showScreen('screen-menu')">⬅️ Quay lại màn hình chọn trò chơi</button>
+    <h2 class="game-title">🎡 Vòng Quay Điểm Mạnh 🎡</h2>
+
+    <div class="wheel-wrap">
+      <div class="pointer"></div>
+      <div class="wheel" id="wheel"></div>
+      <div class="wheel-center">🎯</div>
+    </div>
+
+    <div>
+      <button id="spinBtn" onclick="spinWheel()">🌀 QUAY</button>
+    </div>
+
+    <div class="result-box" id="resultBox">
+      <div class="result-main">
+        Em hãy nói 1 câu chứng minh mình có điểm mạnh: <span class="keyword" id="resultKeyword"></span> 💪
+      </div>
+      <div class="result-hint" id="resultHint"></div>
+      <button class="action-btn" onclick="spinWheel()">🔁 Quay lại</button>
+    </div>
+  </div>
+
+<script>
+  /* ===== ĐIỀU HƯỚNG GIỮA CÁC MÀN HÌNH ===== */
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0,0);
+  }
+
+  /* ===== TRÒ CHƠI 1: BẢNG TỰ TIN CẢ LỚP ===== */
+  var sky = document.getElementById('sky');
+  var skyEmptyMsg = document.getElementById('skyEmptyMsg');
+
+  // Tạo vài chấm sao nhỏ lấp lánh để trang trí nền bầu trời
+  (function createTwinkles(){
+    for(var i=0;i<40;i++){
+      var t = document.createElement('div');
+      t.className = 'twinkle';
+      var size = Math.random()*3+1;
+      t.style.width = size+'px';
+      t.style.height = size+'px';
+      t.style.top = Math.random()*100+'%';
+      t.style.left = Math.random()*100+'%';
+      t.style.animationDelay = (Math.random()*2.4)+'s';
+      sky.appendChild(t);
+    }
+  })();
+
+  function addStar(){
+    var nameInput = document.getElementById('studentName');
+    var prideInput = document.getElementById('prideText');
+    var name = nameInput.value.trim();
+    var pride = prideInput.value.trim();
+
+    if(!name || !pride){
+      alert('Vui lòng nhập đủ Tên học sinh và Điều em tự hào nhé!');
+      return;
+    }
+
+    if(skyEmptyMsg) skyEmptyMsg.remove();
+
+    var card = document.createElement('div');
+    card.className = 'star-card';
+    var rotate = (Math.random()*8-4).toFixed(1); // xoay nhẹ ngẫu nhiên -4..4 độ để trông tự nhiên
+    card.style.setProperty('--rot', rotate+'deg');
+    card.innerHTML =
+      '<div class="star-icon">⭐</div>' +
+      '<div class="star-name">' + escapeHtml(name) + '</div>' +
+      '<div class="star-text">' + escapeHtml(pride) + '</div>';
+    sky.appendChild(card);
+
+    nameInput.value = '';
+    prideInput.value = '';
+    nameInput.focus();
+
+    // Cuộn xuống ngôi sao vừa thêm
+    card.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+
+  function clearStars(){
+    var stars = sky.querySelectorAll('.star-card');
+    if(stars.length === 0){
+      alert('Bầu trời hiện chưa có ngôi sao nào.');
+      return;
+    }
+    var confirmClear = confirm('Bạn có chắc muốn xóa hết tất cả ngôi sao không?');
+    if(confirmClear){
+      stars.forEach(function(s){ s.remove(); });
+      if(!sky.querySelector('.sky-empty-msg')){
+        var msg = document.createElement('p');
+        msg.className = 'sky-empty-msg';
+        msg.id = 'skyEmptyMsg';
+        msg.textContent = 'Bầu trời đang chờ những ngôi sao đầu tiên của lớp mình... ✨';
+        sky.appendChild(msg);
+        skyEmptyMsg = msg;
+      }
+    }
+  }
+
+  function escapeHtml(str){
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // Cho phép nhấn Enter ở ô "Điều em tự hào" để thêm sao nhanh
+  document.getElementById('prideText').addEventListener('keydown', function(e){
+    if(e.key === 'Enter') addStar();
+  });
+  document.getElementById('studentName').addEventListener('keydown', function(e){
+    if(e.key === 'Enter') document.getElementById('prideText').focus();
+  });
+
+  /* ===== TRÒ CHƠI 2: VÒNG QUAY ĐIỂM MẠNH ===== */
+  var strengths = [
+    { name:'Tự tin',    color:'#ff6fa5', hint:'Ví dụ: Em dám giơ tay phát biểu trước lớp dù có thể trả lời sai.' },
+    { name:'Sáng tạo',  color:'#4d96ff', hint:'Ví dụ: Em thích vẽ tranh theo cách riêng của mình.' },
+    { name:'Chăm chỉ',  color:'#6bcB77', hint:'Ví dụ: Em luôn làm bài tập đầy đủ trước khi đi ngủ.' },
+    { name:'Hài hước',  color:'#ffd93d', hint:'Ví dụ: Em hay kể chuyện vui làm các bạn cười.' },
+    { name:'Tốt bụng',  color:'#ff9f43', hint:'Ví dụ: Em sẵn sàng giúp bạn khi bạn gặp khó khăn.' },
+    { name:'Dũng cảm',  color:'#9b5de5', hint:'Ví dụ: Em dám nhận lỗi khi làm sai.' },
+    { name:'Kiên trì',  color:'#00bfa6', hint:'Ví dụ: Em tập đi xe đạp nhiều lần cho đến khi thành công.' },
+    { name:'Thân thiện',color:'#f45b69', hint:'Ví dụ: Em luôn chào hỏi và làm quen với bạn mới.' }
+  ];
+
+  var wheelEl = document.getElementById('wheel');
+  var segAngle = 360 / strengths.length;
+  var currentRotation = 0;
+  var isSpinning = false;
+
+  // Vẽ vòng quay: nền conic-gradient theo màu từng ô + nhãn chữ đặt theo góc
+  (function buildWheel(){
+    var gradientParts = [];
+    strengths.forEach(function(s, i){
+      var start = i*segAngle;
+      var end = (i+1)*segAngle;
+      gradientParts.push(s.color + ' ' + start + 'deg ' + end + 'deg');
+    });
+    wheelEl.style.background = 'conic-gradient(' + gradientParts.join(', ') + ')';
+
+    strengths.forEach(function(s, i){
+      var label = document.createElement('div');
+      label.className = 'wheel-label';
+      // Góc giữa mỗi ô (0 độ = hướng lên trên, tính theo chiều kim đồng hồ)
+      var midAngle = i*segAngle + segAngle/2;
+      label.style.transform = 'rotate(' + midAngle + 'deg)';
+      label.innerHTML = '<span style="display:inline-block; transform:rotate(0deg);">' + s.name + '</span>';
+      wheelEl.appendChild(label);
+    });
+  })();
+
+  function spinWheel(){
+    if(isSpinning) return;
+    isSpinning = true;
+    document.getElementById('resultBox').classList.remove('show');
+
+    var targetIndex = Math.floor(Math.random() * strengths.length);
+    // Góc để đưa tâm ô targetIndex về đúng vị trí kim chỉ (phía trên, 0 độ)
+    var centerOfSegment = targetIndex*segAngle + segAngle/2;
+    var neededOffset = (360 - centerOfSegment) % 360;
+    // Thêm nhiều vòng quay để tạo hiệu ứng đẹp mắt
+    var extraSpins = 6 + Math.floor(Math.random()*3); // 6-8 vòng
+    var newRotation = currentRotation - (currentRotation % 360) + extraSpins*360 + neededOffset;
+    // Đảm bảo luôn quay tiếp về phía trước (không giật lùi)
+    while(newRotation <= currentRotation){ newRotation += 360; }
+
+    currentRotation = newRotation;
+    wheelEl.style.transform = 'rotate(' + currentRotation + 'deg)';
+
+    setTimeout(function(){
+      showResult(targetIndex);
+      isSpinning = false;
+    }, 4100); // khớp với thời gian transition 4s của vòng quay
+  }
+
+  function showResult(index){
+    var s = strengths[index];
+    document.getElementById('resultKeyword').textContent = s.name;
+    document.getElementById('resultHint').textContent = s.hint;
+    var box = document.getElementById('resultBox');
+    box.classList.add('show');
+    box.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+</script>
+</body>
+</html>
