@@ -475,9 +475,10 @@
     strengths.forEach(function(s, i){
       var label = document.createElement('div');
       label.className = 'wheel-label';
-      // Góc giữa mỗi ô (0 độ = hướng lên trên, tính theo chiều kim đồng hồ)
+      // Góc giữa mỗi ô (0 độ = hướng lên trên, tính theo chiều kim đồng hồ).
+      // Trừ 90 độ vì hướng mặc định của label là sang phải (Đông), không phải lên trên (Bắc).
       var midAngle = i*segAngle + segAngle/2;
-      label.style.transform = 'rotate(' + midAngle + 'deg)';
+      label.style.transform = 'rotate(' + (midAngle - 90) + 'deg)';
       label.innerHTML = '<span style="display:inline-block; transform:rotate(0deg);">' + s.name + '</span>';
       wheelEl.appendChild(label);
     });
